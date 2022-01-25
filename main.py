@@ -7,7 +7,6 @@ from profile import *
 from sessions import *
 
 app = Flask(__name__)
-games = []
 session = Session()
 
 
@@ -27,7 +26,7 @@ def connect():
         access = True
     else:
         for game in session.sessions:
-            if game.identifier == identifier:
+            if game.identifier == identifier and not name in game.players:
                 lobby = game
                 game.players.append(Profile(name))
                 access = True
@@ -38,4 +37,35 @@ def connect():
     return jsonify(dictionary)
 
 
-app.run("0.0.0.0", 5000)
+@app.route('/disconnect', methods=["POST"])
+def disconnect():
+    data = request.form
+    name = data.get("name")
+    game_id = data.get("identifier")
+    success = False
+
+    for game in session.sessions:
+        if game.identifier == game_id:
+            for profile in game.players:
+                if profile.nickname == name:
+                    game.players.remove(profile)
+                    success = True
+                    if len(game.players) == 0:
+                        session.sessions.remove(game)
+                    break
+    dictionary = {"access": success}
+    return jsonify(dictionary)
+
+
+@app.route('/get_lobby', methods=["GET"])
+def get_lobby():
+    id = request.args.get("id")
+    profiles = []
+    for game in session.sessions:
+        if game.identifier == id:
+            profiles = game.players
+        print(game.players)
+    return {"profiles": [profile.convert() for profile in profiles]}
+
+
+app.run("172.20.10.9", 5000)
