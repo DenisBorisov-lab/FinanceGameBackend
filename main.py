@@ -68,4 +68,4 @@ def get_lobby():
     return {"profiles": [profile.convert() for profile in profiles]}
 
 
-app.run("172.20.10.9", 5000)
+app.run("0.0.0.0", 5000)
